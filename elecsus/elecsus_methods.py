@@ -23,8 +23,8 @@ Usage:
 .......
 .........
 ........
-.......	
-	
+.......
+
 
 """
 
@@ -41,9 +41,9 @@ from libs import runcardCheck
 from libs.tools import fileOutput, plotOutput, smoother, read_in_twoColumn
 from libs.numberDensityEqs import *
 
-import libs.MLFittingRoutine as ML
-import libs.SAFittingRoutine as SA
-import libs.RRFittingRoutine as RR
+from libs import MLFittingRoutine as ML
+from libs import SAFittingRoutine as SA
+from libs import RRFittingRoutine as RR
 
 if os.name == 'posix':
 	from time import time as timing #Timing for linux or apple
@@ -54,16 +54,16 @@ else:
 warnings.simplefilter("ignore")
 
 def calculate(detuning_range, p, OutputType='All'):
-	""" 
+	"""
 	Detuning range in GHz.
 	p is a list of parameters comprising (in order):
 	[Element, Dline, Bfield, T, lcell, rb85frac, DoppTemp, Theta0, Pol, shift, GammaBuf,
 	ConstrainDoppT, K40frac, K41frac]
-	
+
 	Returns list of arrays (in order):
-	
+
 	S0,S1,S2,S3,Ix,Iy,nplus,nminus,phi,alphaplus,alphaminus
-	
+
 	"""
 	#startTime = timing()
 	spec_data = spectra.spectrum(detuning_range, # convert to MHz
@@ -71,15 +71,15 @@ def calculate(detuning_range, p, OutputType='All'):
 					rb85frac=p[5], DoppTemp=p[6], theta0=p[7], Pol=p[8], shift=p[9],
 					GammaBuf=p[10], Constrain=p[11], K40frac=p[12], K41frac=p[13],
 					OutputType=OutputType)
-	
+
 	#print 'Time taken (Calculation only):', timing() - startTime
 
 	return spec_data
-	
+
 def fit_data(data,parameters,paramBoolList,experimental_datatype='S0',fit_algorithm='ML',**kw):
-	""" 
+	"""
 	Blurb about this:
-	
+
 	data is a 2-element list containing x and y data 1-d arrays.
 	parameters (and parameter order) is same as for the calculate() method.
 	paramBoolList is ...
@@ -87,19 +87,19 @@ def fit_data(data,parameters,paramBoolList,experimental_datatype='S0',fit_algori
 	fit_algorith is ...
 	keywords are
 	"""
-	
-	
+
+
 	## alter the parameter order. again.
 	## Really need to rewrite the fitting modules for a more sensible parameter order
 	## but it's a pain and doesn't add any functionality, so
 	## it is therefore on the 'to do' list!
-	
+
 	## Order as given in the 'parameters' argument
 	## Element, Dline, B, T, L, Rb85, DoppT, Theta0, Pol, shift,
 	## GammaBuf, Constrain, K40, K41
-	
+
 	## Order required by Fitting routines:
-	## Element, OutputType, B, T, L, Rb85%, DoppT, Theta0, Pol, Shift, 
+	## Element, OutputType, B, T, L, Rb85%, DoppT, Theta0, Pol, Shift,
 	## GammaBuf, Constrain, Dline, Precision, K40%, K41%
 
 	parameters_new = [None]*16
@@ -109,36 +109,36 @@ def fit_data(data,parameters,paramBoolList,experimental_datatype='S0',fit_algori
 	parameters_new[12] = parameters[1]
 	parameters_new[13] = 10
 	parameters_new[14:] = parameters[12:]
-	
+
 	#print parameters_new
-	
-	
+
+
 	startTime = timing()
 	xdata, ydata = data
 	#print xdata, ydata
 	#print type(xdata), type(ydata)
-	
-	
-	# Call different fitting routines        
+
+
+	# Call different fitting routines
 	if fit_algorithm == 'Marquardt-Levenberg':
-		print '\nPerfoming Marquardt-Levenberg fitting routine.'
+		print('\nPerfoming Marquardt-Levenberg fitting routine.')
 		optParams, Spec = ML.MLfit(xdata,ydata,parameters_new,
 												 paramBoolList,**kw)
 	elif fit_algorithm == 'Simulated Annealing':
-		print '\nPerforming fitting by simulated annealing.'
+		print('\nPerforming fitting by simulated annealing.')
 		optParams, Spec = SA.SAFit(xdata,ydata,parameters_new,
 												 paramBoolList,**kw)
 	else:
-		print '\nPerforming fitting by Random-Restart hill climbing method.'
+		print('\nPerforming fitting by Random-Restart hill climbing method.')
 		#The more parameters to fit, the more evaluations we need to do.
-		factor = sum(paramBoolList) 
+		factor = sum(paramBoolList)
 		evaluationNumber = factor**2 + 5 #integer
 		optParams, Spec = RR.RRFit(xdata,ydata,parameters_new,paramBoolList,
 								   evaluationNumber,**kw)
-	
-	
+
+
 	RMS = sqrt(((ydata - Spec)**2).sum()/float(len(ydata)))
-	
+
 	# Write the fit parameters to a file
 	parameterLabels = ['Magnetic field in Gauss =',
 					   'Reservoir temperature in Celsius =',
@@ -147,7 +147,7 @@ def fit_data(data,parameters,paramBoolList,experimental_datatype='S0',fit_algori
 					   'Doppler temperature in Celsius =',
 					   'Theta0 in degrees =',
 					   'Initial sigma minus polarisation percentage = ',
-					   'Shift in MHz =', 
+					   'Shift in MHz =',
 					   'Extra Lorentzian width broadening (MHz) =',
 					   'Potassium-40 percentage =',
 					   'Potassium-41 percentage =']
@@ -165,7 +165,7 @@ def fit_data(data,parameters,paramBoolList,experimental_datatype='S0',fit_algori
 	optParams_out[1] = optParams[12]
 	optParams_out[2:12] = optParams[2:12]
 	optParams_out[12:] = optParams[14:]
-	
-	print 'Optimum parameters found !'
-	
+
+	print('Optimum parameters found !')
+
 	return optParams_out, RMS

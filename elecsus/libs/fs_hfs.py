@@ -23,7 +23,7 @@ Called by EigenSystem
 
 from numpy import identity,dot
 from scipy.linalg import kron
-from ang_mom import jx,jy,jz
+from .ang_mom import jx,jy,jz
 
 def Hfs(L,S,I):
     """Provides the L dot S matrix (fine structure)"""
@@ -51,7 +51,7 @@ def Hfs(L,S,I):
     Fi=identity(gF)
     Hfs=0.5*(kron(J2,Ii)-L*(L+1)*Fi-S*(S+1)*Fi) # fine structure in m_L,m_S,m_I basis
     return Hfs
-        
+
 def Hhfs(L,S,I):
     """Provides the I dot J matrix (magnetic dipole interaction)"""
     gS=int(2*S+1)
@@ -115,14 +115,14 @@ def Bbhfs(L,S,I):
     Ix=jx(I)
     Iy=jy(I)
     Iz=jz(I)
-    
+
     Fi=identity(gF)
 
     IdotJ=kron(Jx,Ix)+kron(Jy,Iy)+kron(Jz,Iz)
     IdotJ2=dot(IdotJ,IdotJ)
 
     if I != 0:
-		Bbhfs=1./(6*I*(2*I-1))*(3*IdotJ2+3./2*IdotJ-I*(I+1)*15./4*Fi)
+        Bbhfs=1./(6*I*(2*I-1))*(3*IdotJ2+3./2*IdotJ-I*(I+1)*15./4*Fi)
     else:
         Bbhfs = 0
     return Bbhfs
